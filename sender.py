@@ -65,5 +65,5 @@ if __name__ == "__main__":
     for char in message:
         print(f"sending {char} ({ord(char)})")
         send_dhcp_discover(ord(char), interface, src_mac=mac)
-        input("enter to continue")
+        # input("enter to continue")
     send_dhcp_discover(0, interface, src_mac=mac)
