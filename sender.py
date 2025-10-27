@@ -4,6 +4,7 @@ from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.sendrecv import sendp
 from scapy.arch import get_if_hwaddr
 import random
+import os
 
 def mac_to_chaddr(mac: str) -> bytes:
     """
@@ -14,7 +15,7 @@ def mac_to_chaddr(mac: str) -> bytes:
     # chaddr field is 16 bytes long in BOOTP
     return mac_bytes + b"\x00" * (16 - len(mac_bytes))
 
-def send_dhcp_discover(lease_time_seconds: int, iface: str, src_mac: str = None):
+def send_dhcp_discover(lease_time_seconds: int, iface: str, src_mac = None):
     """
     Send a DHCP Discover packet requesting a specific lease time.
 
@@ -56,14 +57,41 @@ def send_dhcp_discover(lease_time_seconds: int, iface: str, src_mac: str = None)
     sendp(pkt, iface=iface, verbose=False)
     # print("[+] Packet sent.")
 
-if __name__ == "__main__":
-    interface = "eth0"
-    mac = None
-    message = input("enter your message: ")
+def send_text(message: str) -> None:
     # send init message
     send_dhcp_discover(0, interface, src_mac=mac)
     for char in message:
-        print(f"sending {char} ({ord(char)})")
         send_dhcp_discover(ord(char), interface, src_mac=mac)
-        # input("enter to continue")
     send_dhcp_discover(0, interface, src_mac=mac)
+
+if __name__ == "__main__":
+    if os.geteuid() != 0:
+        exit("ERROR: you are not root. This script requires root privileges.")
+    interface = "eth0"
+    mac = None
+    print(r""" ____  _   _  ___  ____     ___  _____  _  _  ____  ____  ____     ___  _   _    __    _  _  _  _  ____  __   
+(  _ \( )_( )/ __)(  _ \   / __)(  _  )( \/ )( ___)(  _ \(_  _)   / __)( )_( )  /__\  ( \( )( \( )( ___)(  )  
+ )(_) )) _ (( (__  )___/  ( (__  )(_)(  \  /  )__)  )   /  )(    ( (__  ) _ (  /(__)\  )  (  )  (  )__)  )(__ 
+(____/(_) (_)\___)(__)     \___)(_____)  \/  (____)(_)\_) (__)    \___)(_) (_)(__)(__)(_)\_)(_)\_)(____)(____)""")
+    print()
+    
+    exit_repl = False
+    while not exit_repl:
+        print("""OPTIONS:\n[1] send a simple text message\n[2] send a file\n[3] credits\n[4] exit
+    """)
+        user_choice = int(input("Enter a number 1-4: "))
+        match user_choice:
+            case 1:
+                message = input("enter a message to send: ")
+                send_text(message)
+                print("sent message successfully!")
+            
+            case 2: 
+                print("send file here")
+                
+            case 3:
+                print("Created for CSEC-750 (Covert Comms) at RIT in Fall 2025 by:\nCayden Wright\nEric Antonecchia\nKelly Orjiude\nChris Baudouin")
+                
+            case 4:
+                print("Goodbye!")
+                exit_repl = True
