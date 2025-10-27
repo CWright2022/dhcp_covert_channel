@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from scapy.layers.l2 import Ether
 from scapy.layers.inet import IP, UDP
 from scapy.layers.dhcp import DHCP, BOOTP
@@ -57,12 +58,21 @@ def send_dhcp_discover(lease_time_seconds: int, iface: str, src_mac = None):
     sendp(pkt, iface=iface, verbose=False)
     # print("[+] Packet sent.")
 
-def send_text(message: str) -> None:
+def send_text(message: str, interface, mac) -> None:
     # send init message
     send_dhcp_discover(0, interface, src_mac=mac)
     for char in message:
         send_dhcp_discover(ord(char), interface, src_mac=mac)
     send_dhcp_discover(0, interface, src_mac=mac)
+
+def send_file(local_filename: str, interface: str, mac) -> None:
+    content = ""
+    with open(local_filename) as file:
+        content = file.read()
+    send_dhcp_discover(1, interface, mac)
+    for char in content:
+        send_dhcp_discover(ord(char), interface, src_mac=mac)
+    send_dhcp_discover(1, interface, mac)
 
 if __name__ == "__main__":
     if os.geteuid() != 0:
@@ -79,15 +89,21 @@ if __name__ == "__main__":
     while not exit_repl:
         print("""OPTIONS:\n[1] send a simple text message\n[2] send a file\n[3] credits\n[4] exit
     """)
-        user_choice = int(input("Enter a number 1-4: "))
+        user_choice = ""
+        try:
+            user_choice = int(input("Enter a number 1-4: "))
+        except ValueError:
+            print("Invalid option.")
+            continue
         match user_choice:
             case 1:
                 message = input("enter a message to send: ")
-                send_text(message)
+                send_text(message, interface, mac)
                 print("sent message successfully!")
             
             case 2: 
-                print("send file here")
+                filename = input("enter full filename:")
+                send_file(filename, interface, mac)
                 
             case 3:
                 print("Created for CSEC-750 (Covert Comms) at RIT in Fall 2025 by:\nCayden Wright\nEric Antonecchia\nKelly Orjiude\nChris Baudouin")
@@ -95,3 +111,7 @@ if __name__ == "__main__":
             case 4:
                 print("Goodbye!")
                 exit_repl = True
+            
+            case _:
+                print("Invalid option.")
+                
