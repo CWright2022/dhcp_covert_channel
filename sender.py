@@ -6,6 +6,8 @@ from scapy.sendrecv import sendp
 from scapy.arch import get_if_hwaddr
 import random
 import os
+import time
+DELAY_FACTOR = 1
 
 def mac_to_chaddr(mac: str) -> bytes:
     """
@@ -63,6 +65,7 @@ def send_text(message: str, interface, mac) -> None:
     send_dhcp_discover(0, interface, src_mac=mac)
     for char in message:
         send_dhcp_discover(ord(char), interface, src_mac=mac)
+        time.sleep(random.randint(1,100)*DELAY_FACTOR*0.001)
     send_dhcp_discover(0, interface, src_mac=mac)
 
 def send_file(local_filename: str, interface: str, mac) -> None:
@@ -72,6 +75,7 @@ def send_file(local_filename: str, interface: str, mac) -> None:
     send_dhcp_discover(1, interface, mac)
     for char in content:
         send_dhcp_discover(ord(char), interface, src_mac=mac)
+        time.sleep(random.randint(1,100)*DELAY_FACTOR)
     send_dhcp_discover(1, interface, mac)
 
 if __name__ == "__main__":
@@ -87,8 +91,7 @@ if __name__ == "__main__":
     
     exit_repl = False
     while not exit_repl:
-        print("""OPTIONS:\n[1] send a simple text message\n[2] send a file\n[3] credits\n[4] exit
-    """)
+        print(f"OPTIONS:\n[1] send a simple text message\n[2] send a file\n[3] change delay factor (currently {DELAY_FACTOR})\n[4] credits\n[5] exit")
         user_choice = ""
         try:
             user_choice = int(input("Enter a number 1-4: "))
@@ -106,9 +109,16 @@ if __name__ == "__main__":
                 send_file(filename, interface, mac)
                 
             case 3:
-                print("Created for CSEC-750 (Covert Comms) at RIT in Fall 2025 by:\nCayden Wright\nEric Antonecchia\nKelly Orjiude\nChris Baudouin")
+                try:
+                    DELAY_FACTOR = int(input("Enter new delay factor (int >=1): "))
+                except ValueError:
+                    print("Invalid delay factor.")
+                    continue
                 
             case 4:
+                print("Created for CSEC-750 (Covert Comms) at RIT in Fall 2025 by:\nCayden Wright\nEric Antonecchia\nKelly Orjiude\nChris Baudouin")
+                
+            case 5:
                 print("Goodbye!")
                 exit_repl = True
             
