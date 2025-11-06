@@ -7,7 +7,11 @@ from scapy.arch import get_if_hwaddr
 import random
 import os
 import time
-DELAY_FACTOR = 1
+
+DELAY_FACTOR = 0 #multiplier for delay values
+XID = random.randint(1, 0xFFFFFFFF) #transaction ID
+HOSTNAME = 'DESKTOP-'.join(str(random.randint(0, 9)) for _ in range(6))
+VENDOR_CLASS_ID = "MSFT 5.0"
 
 def mac_to_chaddr(mac: str) -> bytes:
     """
@@ -34,8 +38,6 @@ def send_dhcp_discover(lease_time_seconds: int, iface: str, src_mac = None):
                 "Could not determine interface MAC address; pass src_mac explicitly."
             ) from e
 
-    xid = random.randint(1, 0xFFFFFFFF)
-
     chaddr = mac_to_chaddr(src_mac)
 
     # Build packet
@@ -43,14 +45,29 @@ def send_dhcp_discover(lease_time_seconds: int, iface: str, src_mac = None):
         Ether(dst="ff:ff:ff:ff:ff:ff", src=src_mac) /
         IP(src="0.0.0.0", dst="255.255.255.255") /
         UDP(sport=68, dport=67) /
-        BOOTP(op=1, chaddr=chaddr, xid=xid, flags=0x8000) /
+        BOOTP(op=0,
+              htype=1,
+              hlen=6,
+              hops=0,
+              xid=XID,
+              secs=0,
+              flags=(0x8000),
+              ciaddr="0.0.0.0",
+              yiaddr="0.0.0.0",
+              chaddr=chaddr,
+              sname="",
+              file="",
+              ) /
         DHCP(
             options=[
-                ("message-type", "discover"),
+                ("message-type", 1),
+                ("client-id", chaddr),
+                ("hostname", HOSTNAME),
+                ("vendor_class_id", VENDOR_CLASS_ID),
                 # DHCP option 51: IP Address Lease Time (seconds)
                 ("lease_time", lease_time_seconds),
                 # common parameter request list
-                ("param_req_list", [1, 3, 6, 15, 51, 58, 59]),
+                ("param_req_list", [1, 3, 6, 15, 31, 33, 43, 44, 46, 47, 119, 121, 249, 252]),
                 "end",
             ]
         )
