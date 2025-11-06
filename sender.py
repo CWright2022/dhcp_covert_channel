@@ -100,10 +100,11 @@ if __name__ == "__main__":
         exit("ERROR: you are not root. This script requires root privileges.")
     interface = "eth0"
     mac = None
-    print(r""" ____  _   _  ___  ____     ___  _____  _  _  ____  ____  ____     ___  _   _    __    _  _  _  _  ____  __   
-(  _ \( )_( )/ __)(  _ \   / __)(  _  )( \/ )( ___)(  _ \(_  _)   / __)( )_( )  /__\  ( \( )( \( )( ___)(  )  
- )(_) )) _ (( (__  )___/  ( (__  )(_)(  \  /  )__)  )   /  )(    ( (__  ) _ (  /(__)\  )  (  )  (  )__)  )(__ 
-(____/(_) (_)\___)(__)     \___)(_____)  \/  (____)(_)\_) (__)    \___)(_) (_)(__)(__)(_)\_)(_)\_)(____)(____)""")
+    os.system("clear")
+    print(r"""  ___  _  _  ___ ___    ___ _____   _____ ___ _____    ___ _  _   _   _  _ _  _ ___ _    
+ |   \| || |/ __| _ \  / __/ _ \ \ / / __| _ \_   _|  / __| || | /_\ | \| | \| | __| |   
+ | |) | __ | (__|  _/ | (_| (_) \ V /| _||   / | |   | (__| __ |/ _ \| .` | .` | _|| |__ 
+ |___/|_||_|\___|_|    \___\___/ \_/ |___|_|_\ |_|    \___|_||_/_/ \_\_|\_|_|\_|___|____|""")
     print()
     
     exit_repl = False
@@ -111,34 +112,43 @@ if __name__ == "__main__":
         print(f"OPTIONS:\n[1] send a simple text message\n[2] send a file\n[3] change delay factor (currently {DELAY_FACTOR})\n[4] credits\n[5] exit")
         user_choice = ""
         try:
-            user_choice = int(input("Enter a number 1-4: "))
+            user_choice = int(input("Enter a number 1-5: "))
         except ValueError:
+            os.system("clear")
             print("Invalid option.")
             continue
         match user_choice:
             case 1:
+                os.system("clear")
                 message = input("enter a message to send: ")
                 send_text(message, interface, mac)
                 print("sent message successfully!")
             
             case 2: 
+                os.system("clear")
                 filename = input("enter full filename:")
                 send_file(filename, interface, mac)
+                print(f"sent file '{filename}' successfully!")
                 
             case 3:
+                os.system("clear")
                 try:
-                    DELAY_FACTOR = int(input("Enter new delay factor (int >=1): "))
+                    DELAY_FACTOR = int(input("Enter new delay factor (int >=0): "))
+                    print(f"Set delay factor to {DELAY_FACTOR}.")
                 except ValueError:
                     print("Invalid delay factor.")
                     continue
                 
             case 4:
+                os.system("clear")
                 print("Created for CSEC-750 (Covert Comms) at RIT in Fall 2025 by:\nCayden Wright\nEric Antonecchia\nKelly Orjiude\nChris Baudouin")
                 
             case 5:
+                os.system("clear")
                 print("Goodbye!")
                 exit_repl = True
             
             case _:
+                os.system("clear")
                 print("Invalid option.")
                 
