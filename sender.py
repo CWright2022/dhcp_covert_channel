@@ -5,12 +5,18 @@ from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.sendrecv import sendp
 from scapy.arch import get_if_hwaddr
 import random
+import string
 import os
 import time
 
 DELAY_FACTOR = 0 #multiplier for delay values
 XID = random.randint(1, 0xFFFFFFFF) #transaction ID
-HOSTNAME = 'DESKTOP-'.join(str(random.randint(0, 9)) for _ in range(6))
+# Generate a plausible Windows hostname, e.g. 'DESKTOP-7F4A2B3'
+# Use 6-8 uppercase alphanumeric characters for the suffix.
+HOSTNAME = "DESKTOP-" + "".join(
+    random.choice(string.ascii_uppercase + string.digits)
+    for _ in range(random.randint(6, 8))
+)
 VENDOR_CLASS_ID = "MSFT 5.0"
 
 def mac_to_chaddr(mac: str) -> bytes:
