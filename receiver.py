@@ -23,6 +23,17 @@ def capture_dhcp(iface: str, timeout: int = 10) -> tuple:
         nonlocal message_type
         global MESSAGE_IN_PROGRESS
         if pkt.haslayer(DHCP) and pkt.haslayer(BOOTP):
+            # Only process DHCP Discover messages (message-type == 1)
+            dhcp_msg_type = None
+            for opt in pkt[DHCP].options:
+                if isinstance(opt, tuple) and opt[0] == "message-type":
+                    dhcp_msg_type = opt[1]
+                    break
+            # If no DHCP message-type found or it's not Discover (1), ignore
+            if dhcp_msg_type != 1:
+                return
+
+            # Now handle lease_time option (option 51) as before
             for opt in pkt[DHCP].options:
                 if isinstance(opt, tuple) and opt[0] == "lease_time":
                     if MESSAGE_IN_PROGRESS:
@@ -34,11 +45,12 @@ def capture_dhcp(iface: str, timeout: int = 10) -> tuple:
                         break
                     if opt[1] == 0:
                         MESSAGE_IN_PROGRESS = True
-                        message_type="text"
+                        message_type = "text"
                         break
                     if opt[1] == 1:
                         MESSAGE_IN_PROGRESS = True
-                        message_type="file"
+                        message_type = "file"
+                        break
 
     print(f"listener ready...")
     sniff(filter="udp and (port 67 or port 68)",
